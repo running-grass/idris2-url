@@ -1,0 +1,16 @@
+package url-test
+
+authors    = "Grass"
+version    = 0.0.1
+readme     = "README.md"
+license    = "MIT"
+
+main       = Main
+executable = "url-test"
+
+sourcedir  = "src"
+
+depends    = base         >= 0.5.1
+            , contrib
+            , url
+            , tester
