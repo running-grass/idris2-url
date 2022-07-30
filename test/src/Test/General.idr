@@ -25,9 +25,5 @@ tests : List Test
 tests = testParser ++ testStringify
 
 private
-main : IO ()
-main = do
-    success <- runTests $ tests
-    if success
-        then putStrLn "通用UR解析L工作正常"
-        else putStrLn "通用URL解析出错"
+main : IO Bool
+main = runTests tests

@@ -74,9 +74,9 @@ url : Grammar state GeneralToken True GeneralURL
 url = do
   scheme <- match Any
   _ <- match Colon
-  specific <- some (match Any <|> match Colon)
+  specific <- many (match Any <|> match Colon)
   eof
-  pure $ MkGeneralURL scheme $ foldr1 (++) specific
+  pure $ MkGeneralURL scheme $ joinBy "" specific
 
 private
 parser : List (WithBounds GeneralToken) -> Maybe GeneralURL

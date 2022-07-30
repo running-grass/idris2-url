@@ -16,5 +16,8 @@ depends = base         >= 0.5.1
 
 modules  =  Network.URL
           , Network.URL.General
+          , Network.URL.HTTP
+          , Network.URL.HTTP.Data
+          , Network.URL.HTTP.Parser
 
 sourcedir = "src"

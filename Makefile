@@ -6,9 +6,9 @@ help:
 test: 
 	pack run test/test.ipkg
 
-.PHONY: test-parser
-test-parser: 
-	pack exec test/src/Test/Parser.idr
+.PHONY: test-http
+test-http: 
+	pack exec test/src/Test/HTTP.idr
 
 .PHONY: build
 build: 
