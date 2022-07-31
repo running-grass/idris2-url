@@ -15,6 +15,7 @@ data HTTPTokenKind
   = Alpha | Digit | Dot 
     | Colon | Plus | Minus 
     | NumberSign | QuestionMark
+    | Ampersand | EqualsSign
     | Slash | Other
 
 private
@@ -28,6 +29,8 @@ Eq HTTPTokenKind where
   (==) Slash Slash = True
   (==) NumberSign NumberSign = True
   (==) QuestionMark QuestionMark = True
+  (==) Ampersand Ampersand = True
+  (==) EqualsSign EqualsSign = True
   (==) Other Other = True
   (==) _ _ = False
 
@@ -42,6 +45,8 @@ Show HTTPTokenKind where
   show Slash = "Slash"
   show NumberSign = "NumberSign"
   show QuestionMark = "QuestionMark"
+  show Ampersand = "Ampersand"
+  show EqualsSign = "EqualsSign"
   show Other = "Other"
 
 private
@@ -55,6 +60,8 @@ TokenKind HTTPTokenKind where
   TokType Slash = String
   TokType NumberSign = String
   TokType QuestionMark = String
+  TokType Ampersand = String
+  TokType EqualsSign = String
   TokType Other = String
 
   tokValue Alpha s = s
@@ -66,6 +73,8 @@ TokenKind HTTPTokenKind where
   tokValue Slash s = s
   tokValue NumberSign s = s
   tokValue QuestionMark s = s
+  tokValue Ampersand s = s
+  tokValue EqualsSign s = s
   tokValue Other s = s
 
 private
@@ -89,6 +98,8 @@ tokenMap = toTokenMap [
   (is '/',  Slash),
   (is '?',  QuestionMark),
   (is '#',  NumberSign),
+  (is '&',  Ampersand),
+  (is '=',  EqualsSign),
   (digit,  Digit),
   (alpha,  Alpha),
   (any, Other)
@@ -125,17 +136,35 @@ parserPath = do
 
 
 private
-parserQuery : Grammar state HTTPToken True String
+parserQuery : Grammar state HTTPToken True (List QueryParam)
 parserQuery = do
   _ <- match QuestionMark
-  path1 <- many (match Slash 
-              <|> match Alpha 
-              <|> match Digit 
-              <|> match Plus 
-              <|> match Minus 
-              <|> match Dot 
-              <|> match Other)
-  pure $ joinBy "" path1
+  sepBy (match Ampersand) param
+
+  where
+    key : Grammar state HTTPToken False String
+    key = do
+      keys <- many (match Slash 
+            <|> match Alpha
+            <|> match Digit
+            <|> match Plus
+            <|> match Minus
+            <|> match Dot
+            <|> match Other
+          )
+      pure $ joinBy "" keys
+
+    value : Grammar state HTTPToken False String  
+    value = key
+
+    param : Grammar state HTTPToken True QueryParam
+    param = do
+      k <- optional key
+      _ <- match EqualsSign
+      v <- optional value 
+
+      pure (fromMaybe "" k, fromMaybe "" v)
+
 
 private
 parserFragment : Grammar state HTTPToken True String
@@ -151,31 +180,37 @@ parserFragment = do
   pure $ joinBy "" path1
 
 private
-url : Grammar state HTTPToken True HTTPURL
-url = do
+parserScheme : Grammar state HTTPToken True String
+parserScheme = do
   schemeHead <- match Alpha 
   schemeTail <- many (match Alpha <|> match Dot <|> match Plus <|> match Minus)
-
   _ <- match Colon
-  c <- match Slash
-  c <- match Slash
+  pure $ schemeHead ++ joinBy "" schemeTail
+
+private
+parserHost : Grammar state HTTPToken True String
+parserHost = do
+  _ <- match Slash
+  _ <- match Slash
 
   host1 <- some (match Alpha <|> match Digit <|> match Plus <|> match Minus <|> match Dot)
+  pure $ joinBy "" (forget host1)
+
+private
+url : Grammar state HTTPToken True HTTPURL
+url = do
+  scheme <- parserScheme
+  host <- parserHost
   port1 <- optional port
   path1 <- optional parserPath
   query1 <- optional parserQuery
   fragment1 <- optional parserFragment
   eof
 
-  scheme <- pure $ schemeHead ++ joinBy "" schemeTail
-  host <- pure $ joinBy "" (forget host1)
-  port <- pure $ (fromMaybe "" port1)
-  path <- pure $ (fromMaybe "" path1)
-  query <- pure $ (fromMaybe "" query1)
-  fragment <- pure $ (fromMaybe "" fragment1)
+  path <- pure $ (fromMaybe "/" path1)
+  query <- pure $ (fromMaybe [] query1)
 
-  pure $ MkHTTPURL scheme host port path query
-
+  pure $ MkHTTPURL scheme host port1 path query fragment1
 
 private
 parser : List (WithBounds HTTPToken) -> Maybe HTTPURL
@@ -189,4 +224,21 @@ parse x = parser !(lexer x)
 
 public export
 stringify : HTTPURL -> String
-stringify (MkHTTPURL scheme host port path query) = scheme ++ ":" ++ host
+stringify (MkHTTPURL scheme host port path query fragment) = scheme 
+    ++ "://" ++ host ++ port' 
+    ++ path ++ query' ++ fragment' 
+  where 
+    port' : String
+    port' = case port of
+      Nothing => ""
+      (Just p) => ":" ++ p
+
+    query' : String
+    query' = case query of
+      [] => ""
+      xs => "?" ++ (joinBy "&" $ map (\(a,b) => a ++ "=" ++ b) xs)
+
+    fragment' : String
+    fragment' = case fragment of
+      Nothing => ""
+      (Just f) => "#" ++ f
