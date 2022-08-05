@@ -1,59 +1,7 @@
 module Network.URL.General
 
-import Text.Lexer
-import Text.Parser
-
-import Data.List1
 import Data.String
-
-private
-data GeneralTokenKind
-  = Colon | Any
-
-private
-Eq GeneralTokenKind where
-  (==) Colon Colon = True
-  (==) Any Any = True
-  (==) _ _ = False
-
-private
-Show GeneralTokenKind where
-  show Colon = "Colon"
-  show Any = "Any"
-
-private
-TokenKind GeneralTokenKind where
-  TokType Colon = String
-  TokType Any = String
-
-  tokValue Colon _ = ":"
-  tokValue Any s = s
-
-private
-GeneralToken : Type
-GeneralToken = Token GeneralTokenKind
-
-private
-Show GeneralToken where
-    show (Tok kind text) = "Tok kind: " ++ show kind ++ " text: " ++ text
-
-
--- Lexer
-
-
-private
-tokenMap : TokenMap GeneralToken
-tokenMap = toTokenMap [
-  (is ':',  Colon),
-  (some $ isNot ':', Any)
-]
-
-private
-lexer : String -> Maybe (List (WithBounds GeneralToken))
-lexer str = 
-  case lex tokenMap str of
-    (tokens, _, _, "") => Just tokens
-    _ => Nothing
+import Data.String.Parser
 
 -- Data
 public export
@@ -67,26 +15,27 @@ public export
 Eq GeneralURL where
   (MkGeneralURL scheme specific) == (MkGeneralURL scheme1 specific1) = scheme == scheme1 && specific == specific1
 
--- parser
-
 private
-url : Grammar state GeneralToken True GeneralURL
+letters : Parser String
+letters  = do
+  chars <- some $ letter
+  pure . joinBy "" . map Data.String.singleton $ chars
+
+private 
+url : Parser GeneralURL
 url = do
-  scheme <- match Any
-  _ <- match Colon
-  specific <- many (match Any <|> match Colon)
-  eof
-  pure $ MkGeneralURL scheme $ joinBy "" specific
+  scheme <- letters
+  token ":"
+  content <- takeWhile1 (\_ => True)
+  eos
+  pure $ MkGeneralURL scheme content
 
-private
-parser : List (WithBounds GeneralToken) -> Maybe GeneralURL
-parser toks = case parse url toks of
-                      Right (j, []) => Just j
-                      _ => Nothing
-
+-- export function
 public export
 parse : String -> Maybe GeneralURL
-parse x = parser !(lexer x)
+parse str = case parse url str of
+              Right (j,_) => Just j
+              _ => Nothing
 
 public export
 stringify : GeneralURL -> String
