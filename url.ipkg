@@ -19,5 +19,6 @@ modules  =  Network.URL
           , Network.URL.HTTP
           , Network.URL.HTTP.Data
           , Network.URL.HTTP.Parser
-
+          , Network.URL.Internal.Predicate
+          , Network.URL.Internal.StringParser
 sourcedir = "src"

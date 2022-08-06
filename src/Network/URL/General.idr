@@ -2,7 +2,7 @@ module Network.URL.General
 
 import Data.String
 import Data.String.Parser
-
+import Network.URL.Internal.StringParser
 -- Data
 public export
 data GeneralURL  = MkGeneralURL String String
@@ -15,11 +15,7 @@ public export
 Eq GeneralURL where
   (MkGeneralURL scheme specific) == (MkGeneralURL scheme1 specific1) = scheme == scheme1 && specific == specific1
 
-private
-letters : Parser String
-letters  = do
-  chars <- some $ letter
-  pure . joinBy "" . map Data.String.singleton $ chars
+
 
 private 
 url : Parser GeneralURL

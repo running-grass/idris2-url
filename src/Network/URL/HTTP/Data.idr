@@ -8,7 +8,7 @@ public export
 record HTTPURL where
     constructor MkHTTPURL
     scheme, host : String
-    port : Maybe String
+    port : Maybe Int
     path : String
     
     query : List QueryParam

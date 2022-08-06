@@ -5,6 +5,7 @@ import public Network.URL.HTTP.Data
 import Data.List
 import Data.Fin
 
+
 public export
 insertParam : QueryParam -> HTTPURL -> HTTPURL
 insertParam p@(key, value) url = { query := newQuery } url
