@@ -4,6 +4,8 @@ import Tester
 import Tester.Runner
 
 import Network.URL.General
+import Network.URL.Internal.PercentEncoding
+import Data.String
 
 ||| 测试 URL 解析功能
 private
@@ -41,10 +43,37 @@ testEquality = [
     , test "General测试相等-不同specific" $ assertEq False $ (MkGeneralURL "file" "//path1") == (MkGeneralURL "file" "//path2")
 ]
 
+
+||| 测试 percentEncode
+private
+testPercentEncode : List Test
+testPercentEncode = [
+    test "percentEncode: abc" $ assertEq (percentEncode "abc") "abc"
+    , test "percentEncode: 空格" $ assertEq (percentEncode "a b") "a%20b"
+    , test "percentEncode: 特殊符号" $ assertEq (percentEncode "a+b&c") "a%2Bb%26c"
+    , test "percentEncode: 中文" $ assertEq (percentEncode "你好") "%E4%BD%A0%E5%A5%BD"
+    , test "percentEncode: 保留字符" $ assertEq (percentEncode "a~b_c-.") "a~b_c-."
+]
+
+||| 测试 percentDecode
+private
+testPercentDecode : List Test
+testPercentDecode = [
+    test "percentDecode: abc" $ assertEq (percentDecode "abc") "abc"
+    , test "percentDecode: %20" $ assertEq (percentDecode "a%20b") "a b"
+    , test "percentDecode: %2B%26" $ assertEq (percentDecode "a%2Bb%26c") "a+b&c"
+    , test "percentDecode: 中文" $ assertEq (percentDecode "%E4%BD%A0%E5%A5%BD") "你好"
+    , test "percentDecode: 保留字符" $ assertEq (percentDecode "a~b_c-.") "a~b_c-."
+]
+
+
 export 
 tests : List Test
-tests = testParser ++ testStringify ++ testEquality
+tests = testParser ++ testStringify ++ testEquality ++ testPercentEncode ++ testPercentDecode
+
 
 private
 main : IO Bool
-main = runTests tests
+main = do
+  putStrLn "== URL Percent Encoding/Decoding 单元测试 =="
+  runTests tests

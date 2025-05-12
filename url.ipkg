@@ -21,4 +21,5 @@ modules  =  Network.URL
           , Network.URL.HTTP.Parser
           , Network.URL.Internal.Predicate
           , Network.URL.Internal.StringParser
+          , Network.URL.Internal.PercentEncoding
 sourcedir = "src"

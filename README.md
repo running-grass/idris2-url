@@ -1,7 +1,7 @@
 # idris2-url
 WIP……  
 
-A URL library for idris2, Based on [RFC 1738](https://www.rfc-wiki.org/wiki/RFC1738).
+A URL library for idris2, Based on [RFC 1738](https://www.rfc-editor.org/info/rfc1738).
 
 ## Feature
 - [x] General Sytax

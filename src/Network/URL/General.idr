@@ -26,7 +26,7 @@ Eq GeneralURL where
 private 
 url : Parser GeneralURL
 url = do
-  scheme <- letters     -- 解析协议部分（只允许字母）
+  scheme <- schemeParser     -- 解析协议部分（允许字母、数字、+、-、.，首字母为字母）
   token ":"            -- 解析冒号分隔符
   content <- takeWhile1 (\_ => True)  -- 解析剩余的所有内容
   eos                  -- 确保到达字符串末尾

@@ -3,6 +3,7 @@ module Network.URL.Internal.StringParser
 import Data.String.Parser
 import Data.String
 import Data.Fin
+import Network.URL.Internal.Predicate
 
 export
 letters : Parser String
@@ -21,3 +22,10 @@ int : Parser Int
 int = do
   ds <- digits
   pure $ cast ds
+
+export
+schemeParser : Parser String
+schemeParser = do
+  head <- letter
+  tail <- takeWhile (anyPass [isAlphaNum, (== '+'), (== '-'), (== '.')])
+  pure $ singleton head ++ tail
