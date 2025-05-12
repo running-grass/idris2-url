@@ -2,8 +2,4 @@
 type   = "local"
 path   = "."
 ipkg   = "url.ipkg"
-
-[custom.all.url-test]
-type   = "local"
-path   = "test"
-ipkg   = "test.ipkg"
+test   = "test/test.ipkg"

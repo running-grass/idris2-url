@@ -32,11 +32,19 @@ parserHost = do
   token "//"
   takeWhile1 validaId
 
+||| 验证端口号是否在有效范围内 (0-65535)
+private
+validatePort : Int -> Maybe Int
+validatePort p = if p >= 0 && p <= 65535 then Just p else Nothing
+
 private
 parserPort : Parser Int
 parserPort = do
   token ":"
-  int
+  p <- int
+  case validatePort p of
+    Just validPort => pure validPort
+    Nothing => fail "Port number must be between 0 and 65535"
 
 private
 parserPathItem : Parser String
@@ -66,8 +74,6 @@ parserQuery = do
   token "?"
   l <- sepBy1 parserQueryItem $ token "&"
   pure $ forget l
-
-
 
 private
 parserFragment : Parser String
